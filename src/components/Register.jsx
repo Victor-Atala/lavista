@@ -7,7 +7,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      await axios.post('https://localhost:3000/users/register', {
+      await axios.post('https://serverrecu.duckdns.org/users/register', {
         username,
         password,
       });

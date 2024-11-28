@@ -7,7 +7,7 @@ const Login = ({ setToken }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('https://localhost:3000/users/login', {
+      const response = await axios.post('https://serverrecu.duckdns.org/users/login', {
         username,
         password,
       });

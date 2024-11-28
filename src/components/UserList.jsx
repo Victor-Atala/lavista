@@ -7,7 +7,7 @@ const UserList = ({ token }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('https://localhost:3000/users', {
+        const response = await axios.get('https://serverrecu.duckdns.org/users', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(response.data);
