@@ -21,22 +21,40 @@ const UserList = ({ token }) => {
   }, [token]);
 
   // Manejar la edición de usuarios
-  const handleEdit = (userId) => {
-    alert(`Editar usuario con ID: ${userId}`);
-    // Aquí podrías mostrar un formulario de edición
+  const handleEdit = (id) => {
+    const newUsername = prompt('Ingrese el nuevo nombre de usuario:');
+    if (!newUsername) return;
+
+    const newPassword = prompt('Ingrese la nueva contraseña (opcional):');
+
+    axios
+      .put(
+        `https://serverrecu.duckdns.org/users/${id}`,
+        { newUsername, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then(() => {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === id ? { ...user, username: newUsername } : user))
+        );
+        alert('Usuario actualizado correctamente');
+      })
+      .catch((err) => {
+        console.error(err);
+        alert('Error al actualizar el usuario');
+      });
   };
 
   // Manejar la eliminación de usuarios
-  const handleDelete = async (userId) => {
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este usuario?');
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`https://serverrecu.duckdns.org/users/${userId}`, {
+      await axios.delete(`https://serverrecu.duckdns.org/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Filtrar el usuario eliminado de la lista
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
       alert('Usuario eliminado correctamente');
     } catch (err) {
       console.error(err);
