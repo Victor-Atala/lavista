@@ -3,8 +3,10 @@ import axios from 'axios';
 
 const UserList = ({ token }) => {
   const [users, setUsers] = useState([]);
+  const [editUser, setEditUser] = useState(null);
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
-  // Obtener usuarios al cargar el componente
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -20,45 +22,43 @@ const UserList = ({ token }) => {
     fetchUsers();
   }, [token]);
 
-  // Manejar la edición de usuarios
-  const handleEdit = (id) => {
-    const newUsername = prompt('Ingrese el nuevo nombre de usuario:');
-    if (!newUsername) return;
-
-    const newPassword = prompt('Ingrese la nueva contraseña (opcional):');
-
-    axios
-      .put(
-        `https://serverrecu.duckdns.org/users/${id}`,
-        { newUsername, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .then(() => {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user.id === id ? { ...user, username: newUsername } : user))
-        );
-        alert('Usuario actualizado correctamente');
-      })
-      .catch((err) => {
-        console.error(err);
-        alert('Error al actualizar el usuario');
-      });
-  };
-
-  // Manejar la eliminación de usuarios
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este usuario?');
-    if (!confirmDelete) return;
-
+  const deleteUser = async (username) => {
     try {
-      await axios.delete(`https://serverrecu.duckdns.org/users/${id}`, {
+      await axios.delete(`https://serverrecu.duckdns.org/users/${username}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-      alert('Usuario eliminado correctamente');
+      setUsers(users.filter((user) => user.username !== username));
     } catch (err) {
       console.error(err);
-      alert('Error al eliminar el usuario');
+      alert('Error al eliminar usuario');
+    }
+  };
+
+  const updateUser = async () => {
+    if (!newUsername && !newPassword) {
+      alert('Debe proporcionar un nuevo nombre de usuario o contraseña');
+      return;
+    }
+    try {
+      await axios.put(
+        `https://serverrecu.duckdns.org/users/${editUser.username}`,
+        { newUsername, newPassword },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const updatedUsers = users.map((user) =>
+        user.username === editUser.username
+          ? { ...user, username: newUsername || user.username }
+          : user
+      );
+      setUsers(updatedUsers);
+      setEditUser(null);
+      setNewUsername('');
+      setNewPassword('');
+    } catch (err) {
+      console.error(err);
+      alert('Error al actualizar usuario');
     }
   };
 
@@ -66,14 +66,40 @@ const UserList = ({ token }) => {
     <div>
       <h2>Usuarios</h2>
       <ul>
-        {users.map((user) => (
-          <li key={user.id}>
-            {user.username}{' '}
-            <button onClick={() => handleEdit(user.id)}>Editar</button>{' '}
-            <button onClick={() => handleDelete(user.id)}>Eliminar</button>
+        {users.map((user, index) => (
+          <li key={index}>
+            {user.username}
+            <button onClick={() => deleteUser(user.username)}>Eliminar</button>
+            <button onClick={() => setEditUser(user)}>Editar</button>
           </li>
         ))}
       </ul>
+
+      {editUser && (
+        <div>
+          <h3>Editar Usuario</h3>
+          <label>
+            Nuevo nombre de usuario:
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+            />
+          </label>
+          <br />
+          <label>
+            Nueva contraseña:
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </label>
+          <br />
+          <button onClick={updateUser}>Actualizar</button>
+          <button onClick={() => setEditUser(null)}>Cancelar</button>
+        </div>
+      )}
     </div>
   );
 };
